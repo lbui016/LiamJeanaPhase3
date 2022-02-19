@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "bison.tab.h"
+#include "y.tab.h"
 
 #define YY_NO_UNPUT
 /*extern int yylex();
@@ -17,8 +17,8 @@ void yyerror(const char *msg);
 
 %union{
   struct CodeNode *code_node; 
-  char* ident;
-  int num;
+  char *op_val;
+  int int_val;
 }
 
 %error-verbose
@@ -51,18 +51,18 @@ void yyerror(const char *msg);
 %token FALSE
 %token RETURN
 
-%left SUB
-%left ADD
-%left MULT
-%left DIV
-%left MOD
+%token SUB
+%token ADD
+%token MULT
+%token DIV
+%token MOD
 
-%left EQ /*unsure*/
-%left NEQ
-%left LT
-%left GT
-%left LTE
-%left GTE
+%token EQ /*unsure*/
+%token NEQ
+%token LT
+%token GT
+%token LTE
+%token GTE
 
 %token <op_val> IDENT
 %token <op_val> NUMBER
@@ -70,20 +70,22 @@ void yyerror(const char *msg);
 %token SEMICOLON
 %token COLON
 %token COMMA
+%left L_PAREN R_PAREN
 %token L_PAREN
 %token R_PAREN
 %token L_SQUARE_BRACKET
 %token R_SQUARE_BRACKET
 %token ASSIGN /*unsure*/
 
+%type <op_val> ident
 %type <code_node> statements
 %type <code_node> statement
 %type <code_node> functions
 %type <code_node> function
 %type <code_node> declarations
 %type <code_node> declaration
-%type <op_val> ident
 %type <code_node> var
+%type <code_node> expression
 
 
 %start program
@@ -175,7 +177,7 @@ statement: var ASSIGN expression {
 	CodeNode *node = new CodeNode;
 	std::string id = $1;
 	node->code = "";	//hard coded: expression.name
-	//node->code += expression->code
+	node->code += expression->code;
 	node->code = std::string("= ") + id + std::string(", 150\n"); //expression.name instead of 150
 	$$ = node;
 	}
@@ -188,7 +190,7 @@ statement: var ASSIGN expression {
 	$$ = node;
 	}
   | DO BEGIN_LOOP statements ENDLOOP WHILE bool_expr {//printf("statement -> DO BEGIN_LOOP statements ENDLOOP WHILE bool_expr \n");
-gg	CodeNode *node = new CodeNode;
+	CodeNode *node = new CodeNode;
 	$$ = node;
 	}
   | READ var {//printf("statement -> READ vars \n")
@@ -222,8 +224,8 @@ statements: statement SEMICOLON statements {
 	node->code = code_node1->code + code_node2->code;
 	$$ = node;}
 	| %empty {
-	Code *node = new CodeNode;
-	%% = node;
+	CodeNode *node = new CodeNode;
+	$$ = node;
 };
 
 elseStatement: %empty {
