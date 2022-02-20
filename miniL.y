@@ -8,17 +8,17 @@
 #include "y.tab.h"
 
 #define YY_NO_UNPUT
-/*extern int yylex();
-extern int yyparse();*/
+extern int yylex();
+extern int yyparse();
 extern FILE* yyin;
 
 void yyerror(const char *msg);
 %}
 
 %union{
+  char *ident; //op_val
   struct CodeNode *code_node; 
-  char *op_val;
-  int int_val;
+  int num; //int_val
 }
 
 %error-verbose
@@ -64,8 +64,8 @@ void yyerror(const char *msg);
 %token LTE
 %token GTE
 
-%token <op_val> IDENT
-%token <op_val> NUMBER
+%token <ident> IDENT
+%token <ident> NUMBER
 
 %token SEMICOLON
 %token COLON
@@ -77,16 +77,15 @@ void yyerror(const char *msg);
 %token R_SQUARE_BRACKET
 %token ASSIGN /*unsure*/
 
-%type <op_val> ident
+%type <ident> ident
 %type <code_node> statements
 %type <code_node> statement
 %type <code_node> functions
 %type <code_node> function
 %type <code_node> declarations
 %type <code_node> declaration
-%type <code_node> var
+%type <code_node> var /*was ident/op_val*/
 %type <code_node> expression
-
 
 %start program
 
@@ -172,12 +171,12 @@ ident: IDENT {
 	$$ = $1; 
 };
 
-statement: var ASSIGN expression {
+statement: ident ASSIGN expression {
 	//printf("statement -> var ASSIGN expression\n");
 	CodeNode *node = new CodeNode;
 	std::string id = $1;
 	node->code = "";	//hard coded: expression.name
-	node->code += expression->code;
+	//node->code += expression->code;
 	node->code = std::string("= ") + id + std::string(", 150\n"); //expression.name instead of 150
 	$$ = node;
 	}
@@ -315,14 +314,14 @@ term: var {
 	} 
 ;
 
-var: IDENT {//printf("var -> IDENT \n");
+var: ident {//printf("var -> IDENT \n");
 	std::string name = $1;
 	CodeNode *node = new CodeNode;
 	node->code = "";
 	node->name = name;
 	$$ = node;
 }
-  | IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET {
+  | ident L_SQUARE_BRACKET expression R_SQUARE_BRACKET {
 	//printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET \n");
 	}
 ;
