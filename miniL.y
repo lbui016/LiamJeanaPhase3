@@ -12,6 +12,8 @@ extern int yylex();
 extern int yyparse();
 extern FILE* yyin;
 
+int count_names = 0;
+
 void yyerror(const char *msg);
 %}
 
@@ -20,6 +22,7 @@ void yyerror(const char *msg);
   struct CodeNode *code_node; 
   int num; //int_val
 }
+
 
 %error-verbose
 /*%locations*/
@@ -88,6 +91,7 @@ void yyerror(const char *msg);
 %type <code_node> var /*was ident/op_val*/
 %type <code_node> expression
 %type <code_node> multExpr
+%type <code_node> term
 
 %start program
 
@@ -203,7 +207,7 @@ statement: ident ASSIGN expression {
   | READ var {//printf("statement -> READ vars \n")
 	CodeNode *node = new CodeNode;
 	CodeNode *var = $2;
-	node->code = std::string(".< ") + var->name + std::string("\n"); //TODO: figure out required syntax 
+	node->code = std::string(".< ") + var->name + std::string("\n");
 	$$ = node;
 	}
   | WRITE var {
@@ -289,15 +293,23 @@ expression: multExpr {
 	}
   | multExpr ADD expression {
 	//printf("expression -> multExpr ADD expression \n");
-	std::string temp = "_temp" + count_names;
+	std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
-	node->code = $1->code + $3->code + decl_temp_code(temp);
-	node->code += std::string("+ ") + temp + std::string(", ") +  $1->name + std::string(", ") + $3->name + std::string("\n")
+	node->code = $1->code + $3->code;
+	node->code += std::string(". ") + temp + std::string("\n") + std::string("+ ") + temp + std::string(", ") +  $1->name + std::string(", ") + $3->name + std::string("\n");
 	node->name = temp;
-	$$ = node; 
+	$$ = node;
+	count_names++;
 	}
   | multExpr SUB expression {
 	//printf("expression -> multExpr SUB expression \n");
+	std::string temp = "_temp" + count_names + std::string("\n");
+	CodeNode *node = new CodeNode;
+	node->code = $1->code + $3->code;
+	node->code += std::string(". ") + temp + std::string("\n") + std::string("- ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
+	node->code = temp;
+	$$ = node;
+	count_names++;
 	} 
 ;
 
@@ -306,12 +318,33 @@ multExpr: term  {
 	}
   | term MULT multExpr {
 	//printf("multExpr -> term MULT multExpr \n");
+	std::string temp = "_temp" + count_names + std::string("\n");
+	CodeNode *node = new CodeNode;
+	node->code = $1->code + $3->code;
+	node->code += std::string(". ") + temp + std::string("\n") + std::string("* ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
+	node->code = temp;
+	$$ = node;
+	count_names++;
 	}
   | term DIV multExpr {
 	//printf("multExpr -> term DIV multExpr \n");
+	std::string temp = "_temp" + count_names + std::string("\n");
+	CodeNode *node = new CodeNode;
+	node->code = $1->code + $3->code;
+	node->code += std::string(". ") + temp + std::string("\n") + std::string("/ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
+	node->code = temp;
+	$$ = node;
+	count_names++;
 	}
   | term MOD multExpr {
 	//printf("multExpr -> term MOD multExpr \n");
+	std::string temp = "_temp" + count_names + std::string("\n");
+	CodeNode *node = new CodeNode;
+	node->code = $1->code + $3->code;
+	node->code += std::string(". ") + temp + std::string("\n") + std::string("% ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
+	node->code = temp;
+	$$ = node;
+	count_names++;
 	}
 ;
 
