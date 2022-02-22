@@ -81,17 +81,12 @@ void yyerror(const char *msg);
 %token ASSIGN /*unsure*/
 
 %type <ident> ident
-%type <code_node> statements
-%type <code_node> statement
-%type <code_node> elseStatement
 %type <code_node> functions
 %type <code_node> function
 %type <code_node> declarations
 %type <code_node> declaration
-%type <code_node> var /*was ident/op_val*/
-%type <code_node> expression
-%type <code_node> multExpr
-%type <code_node> term
+%type <code_node> statements
+%type <code_node> statement
 
 %start program
 
@@ -122,17 +117,17 @@ function: FUNCTION ident SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LO
 	std::string func_name = $2;
 	node->code = "";
 	node->code += std::string("func ") + func_name + std::string("\n");
-	// declare the declarations
-	CodeNode *params = $5;
-	node->code += params->code;
+	// declare the params declarations
+	CodeNode *declarations = $5;
+	node->code += declarations->code;
 
 	// declare local variables
 	CodeNode *locals = $8;
 	node->code += locals->code;
 	
 	// add the statements
-	CodeNode *statements = $11;
-	node->code += statements->code;
+	/*CodeNode *statements = $11;
+	node->code += statements->code;*/
 
 	node->code += std::string("endfunc\n");
 
@@ -150,24 +145,28 @@ declarations: declaration SEMICOLON declarations {
 	| %empty {
 	//printf("declarations -> epsilon\n");
 	CodeNode *node = new CodeNode;
-	$$ = node;  //empty
+	$$ = node; 
 };
 
 declaration: ident COLON INTEGER {
 	//printf("declaration -> identifiers COLON INTEGER \n");
-	printf("declaration: %s\n", $1);
-	std::string id = $1;
+	//printf("declaration: %s\n", $1);
+	//std::string id = $1;
+	//std::string id = $1;
 	CodeNode *node = new CodeNode;
-	//printf(". %s\n", id);
+	std::string id = $1;
 	node->code = std::string(". ") + id + std::string("\n");
 	$$ = node;
+	//printf(". %s\n", id);
+	//node->code = std::string(". ") + id + std::string("\n");
+	//$$ = node;
 	//node->name 
 	}
 	| ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER {
-	std::string id = $1;
-	CodeNode *node = new CodeNode;
-	node->code = std::string(". ") + id + std::string("\n");
-	$$ = node;
+	//std::string id = $1;
+	//CodeNode *node = new CodeNode;
+	//node->code = std::string(". ") + id + std::string("\n");
+	//$$ = node;
 	//printf("Declaration -> identifiers COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER \n")
 	//NOT DONE? -JEANA THINKS
 };
@@ -179,66 +178,70 @@ ident: IDENT {
 
 statement: ident ASSIGN expression {
 	//printf("statement -> var ASSIGN expression\n");
-	CodeNode *node = new CodeNode;
-	std::string id = $1;
-	CodeNode *expression = $3;
-	node->code = "";	//hard coded: expression.name
+	//CodeNode *node = new CodeNode;
+	//std::string id = $1;
+	//CodeNode *expression = $3;
+	//node->code = "";	//hard coded: expression.name
 	//node->code += expression->code;
 	//node->code = std::string("= ") + id + std::string(", 150\n"); //expression.name instead of 150
-	node->code = std::string("= ") + id + expression->name + std::string("\n");
-	$$ = node;
+	//node->code = std::string("= ") + id + expression->name + std::string("\n");
+	//$$ = node;
 	}
   | IF bool_expr THEN statements elseStatement ENDIF {//printf("statement -> IF bool_expr THEN statements elseStatement ENDIF \n");
-	CodeNode *node = new CodeNode;
+	//CodeNode *node = new CodeNode;
 	//std::string bool_expression = $2;
-	CodeNode *statements = $4;
-	CodeNode *elseStatement = $5;
-	node->code = std::string("?:= ") + statements->code + std::string(", ") + elseStatement->code + std::string(", ") + std::string("\n"); //TODO: add bool expr 
-	$$ = node;
+	//CodeNode *statements = $4;
+	//CodeNode *elseStatement = $5;
+	//node->code = std::string("?:= ") + statements->code + std::string(", ") + elseStatement->code + std::string(", ") + std::string("\n"); //TODO: add bool expr 
+	//$$ = node;
 	}
   | WHILE bool_expr BEGIN_LOOP statements ENDLOOP {//printf("statement -> WHILE bool_expr BEGIN_LOOP statements ENDLOOP");
-	CodeNode *node = new CodeNode;
-	$$ = node;
+	//CodeNode *node = new CodeNode;
+	//$$ = node;
 	}
   | DO BEGIN_LOOP statements ENDLOOP WHILE bool_expr {//printf("statement -> DO BEGIN_LOOP statements ENDLOOP WHILE bool_expr \n");
-	CodeNode *node = new CodeNode;
-	$$ = node;
+	//CodeNode *node = new CodeNode;
+	//$$ = node;
 	}
   | READ var {//printf("statement -> READ vars \n")
-	CodeNode *node = new CodeNode;
-	CodeNode *var = $2;
-	node->code = std::string(".< ") + var->name + std::string("\n");
-	$$ = node;
+	//CodeNode *node = new CodeNode;
+	//CodeNode *var = $2;
+	//node->code = std::string(".< ") + var->name + std::string("\n");
+	//$$ = node;
 	}
   | WRITE var {
 	//printf("statement -> WRITE vars \n");
-	CodeNode *node = new CodeNode;
+	/*CodeNode *node = new CodeNode;
 	CodeNode *var = $2;
 	std::string id = var->name;
 	node->code = "";
 	node->code += std::string(".> ") + id + std::string("\n");
-	$$ = node;}
+	$$ = node;*/}
   | CONTINUE {
-	CodeNode *node = new CodeNode;
-	$$ = node;
+	//CodeNode *node = new CodeNode;
+	//$$ = node;
 	//printf("statement -> CONTINUE \n");
 	}
   | BREAK {
-	CodeNode *node = new CodeNode;
-	$$ = node;
+	//CodeNode *node = new CodeNode;
+	//$$ = node;
 	//printf("statement -> BREAK \n");
 	}
   | RETURN expression {
 	//printf("statement -> RETURN expression \n");
+	//CodeNode *node = new CodeNode;
+	//$$ = node;
 	}
 ;
 
 statements: statement SEMICOLON statements {
-  	CodeNode *code_node1 = $1;
+  	/*CodeNode *code_node1 = $1;
 	CodeNode *code_node2 = $3;
 	
 	CodeNode *node = new CodeNode;
 	node->code = code_node1->code + code_node2->code;
+	$$ = node;*/
+	CodeNode *node = new CodeNode;
 	$$ = node;
 	}
 	| %empty {
@@ -259,6 +262,12 @@ bool_expr: bool_expr bool_expr {
 	}
   | expression comp expression {
 	//printf("bool_expr -> expression comp expression \n");
+	/*CodeNode *node = new CodeNode;
+	CodeNode *src1 = $1;
+	CodeNode *src2 = $3;
+	CodeNode *comparison  = $2;
+	std::string comp = comparision->name;
+	node->code = comp +*/
 	}
   | NOT {
 	//printf("bool_expr -> NOT \n");
@@ -293,23 +302,23 @@ expression: multExpr {
 	}
   | multExpr ADD expression {
 	//printf("expression -> multExpr ADD expression \n");
-	std::string temp = "_temp" + count_names + std::string("\n");
+	/*std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
 	node->code = $1->code + $3->code;
 	node->code += std::string(". ") + temp + std::string("\n") + std::string("+ ") + temp + std::string(", ") +  $1->name + std::string(", ") + $3->name + std::string("\n");
 	node->name = temp;
 	$$ = node;
-	count_names++;
+	count_names++;*/
 	}
   | multExpr SUB expression {
 	//printf("expression -> multExpr SUB expression \n");
-	std::string temp = "_temp" + count_names + std::string("\n");
+	/*std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
 	node->code = $1->code + $3->code;
 	node->code += std::string(". ") + temp + std::string("\n") + std::string("- ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 	node->code = temp;
 	$$ = node;
-	count_names++;
+	count_names++;*/
 	} 
 ;
 
@@ -318,33 +327,33 @@ multExpr: term  {
 	}
   | term MULT multExpr {
 	//printf("multExpr -> term MULT multExpr \n");
-	std::string temp = "_temp" + count_names + std::string("\n");
+	/*std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
 	node->code = $1->code + $3->code;
 	node->code += std::string(". ") + temp + std::string("\n") + std::string("* ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 	node->code = temp;
 	$$ = node;
-	count_names++;
+	count_names++;*/
 	}
   | term DIV multExpr {
 	//printf("multExpr -> term DIV multExpr \n");
-	std::string temp = "_temp" + count_names + std::string("\n");
+	/*std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
 	node->code = $1->code + $3->code;
 	node->code += std::string(". ") + temp + std::string("\n") + std::string("/ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 	node->code = temp;
 	$$ = node;
-	count_names++;
+	count_names++;*/
 	}
   | term MOD multExpr {
 	//printf("multExpr -> term MOD multExpr \n");
-	std::string temp = "_temp" + count_names + std::string("\n");
+	/*std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
 	node->code = $1->code + $3->code;
 	node->code += std::string(". ") + temp + std::string("\n") + std::string("% ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 	node->code = temp;
 	$$ = node;
-	count_names++;
+	count_names++;*/
 	}
 ;
 
@@ -369,11 +378,11 @@ term: var {
 ;
 
 var: ident {//printf("var -> IDENT \n");
-	std::string name = $1;
+	/*std::string name = $1;
 	CodeNode *node = new CodeNode;
 	node->code = "";
 	node->name = name;
-	$$ = node;
+	$$ = node;*/
 }
   | ident L_SQUARE_BRACKET expression R_SQUARE_BRACKET {
 	//printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET \n");
@@ -390,7 +399,7 @@ var: ident {//printf("var -> IDENT \n");
 }*/
 
 int main(int argc, char  **argv) {
-        yyparse();
+	yyparse();
         return 0;
 }
 
