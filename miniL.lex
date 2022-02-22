@@ -1,6 +1,7 @@
 %{
 	#include <stdio.h>
         #include <math.h>
+	#include <string>
         #include "y.tab.h"
         int lineCount = 1;
         int columnCount = 0;
@@ -54,7 +55,7 @@ DIGIT   [0-9]
 "##".+   {printf("");}
 
 [a-zA-z][a-zA-Z0-9]+?_  {printf("Error at line %d, column %d: identifier \"%s\" cannot end with underscore\n", lineCount, columnCount, yytext);}
-[a-zA-Z][a-zA-Z0-9_]?+        {yylval.ident = yytext; return IDENT; columnCount += yyleng;}
+[a-zA-Z][a-zA-Z0-9_]?+        {char *ptr = new char[yyleng]; strcpy(ptr, yytext); yylval.ident=ptr; return IDENT; columnCount += yyleng;}
 {DIGIT}+        {columnCount += yyleng; yylval.num = atoi(yytext); return NUMBER;}
 
 ";"      {return SEMICOLON;  columnCount += 1;}
