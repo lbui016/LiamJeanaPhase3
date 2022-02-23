@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <string.h>
 #include "y.tab.h"
 
 #define YY_NO_UNPUT
@@ -13,6 +14,61 @@ extern int yyparse();
 extern FILE* yyin;
 
 int count_names = 0;
+
+enum Type { Integer, Array };
+struct Symbol {
+  std::string name;
+  Type type;
+};
+struct Function {
+  std::string name;
+  std::vector<Symbol> declarations;
+};
+
+std::vector <Function> symbol_table;
+
+
+Function *get_function() {
+  int last = symbol_table.size()-1;
+  return &symbol_table[last];
+}
+
+bool find(std::string &value) {
+  Function *f = get_function();
+  for(int i=0; i < f->declarations.size(); i++) {
+    Symbol *s = &f->declarations[i];
+    if (s->name == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void add_function_to_symbol_table(std::string &value) {
+  Function f; 
+  f.name = value; 
+  symbol_table.push_back(f);
+}
+
+void add_variable_to_symbol_table(std::string &value, Type t) {
+  Symbol s;
+  s.name = value;
+  s.type = t;
+  Function *f = get_function();
+  f->declarations.push_back(s);
+}
+
+void print_symbol_table(void) {
+  printf("symbol table:\n");
+  printf("--------------------\n");
+  for(int i=0; i<symbol_table.size(); i++) {
+    printf("function: %s\n", symbol_table[i].name.c_str());
+    for(int j=0; j<symbol_table[i].declarations.size(); j++) {
+      printf("  locals: %s\n", symbol_table[i].declarations[j].name.c_str());
+    }
+  }
+  printf("--------------------\n");
+}
 
 void yyerror(const char *msg);
 %}
@@ -121,6 +177,7 @@ function: FUNCTION ident SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LO
 	//{printf("function -> FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY \n");}
 	CodeNode *node = new CodeNode;
 	std::string func_name = $2;
+	add_function_to_symbol_table(func_name);
 	node->code = "";
 	node->code += std::string("func ") + func_name + std::string("\n");
 	// declare the params declarations
@@ -162,12 +219,17 @@ declaration: ident COLON INTEGER {
 	//std::string id = $1;
 	CodeNode *node = new CodeNode;
 	std::string id = $1;
+	Type t = Integer;
+	//add_variable_to_symbol_table(id, t);
 	node->code = std::string(". ") + id + std::string("\n");
 	$$ = node;
 	//printf(". %s\n", id);
 	//node->code = std::string(". ") + id + std::string("\n");
 	//$$ = node;
-	//node->name 
+	//node->name
+	//std::string value = $1;
+	//Type t = Integer;
+	//add_variable_to_symbol_table(id, t); 
 	}
 	| ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER {
 	//std::string id = $1;
@@ -523,6 +585,7 @@ var: ident {//printf("var -> IDENT \n");
 
 int main(int argc, char  **argv) {
 	yyparse();
+	print_symbol_table();
         return 0;
 }
 
