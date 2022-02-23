@@ -154,6 +154,7 @@ declarations: declaration SEMICOLON declarations {
 	$$ = node; 
 };
 
+
 declaration: ident COLON INTEGER {
 	//printf("declaration -> identifiers COLON INTEGER \n");
 	//printf("declaration: %s\n", $1);
@@ -269,6 +270,13 @@ statement: ident ASSIGN expression {
   | RETURN expression {
 	//printf("statement -> RETURN expression \n");
 	CodeNode *node = new CodeNode;
+	CodeNode *expression = $2;
+	node->code += expression->code;
+	std::string temp = "_temp" + std::to_string(count_names - 1);
+        node->name = expression->name;
+	//printf(node->name.c_str());
+	node->code += std::string("ret ") + temp + std::string("\n");
+	//printf(node->code.c_str());
 	$$ = node;
 	}
 ;
@@ -353,7 +361,8 @@ expression: multExpr {
 	CodeNode *expression = $3;
 	//node->code = "";
 	std::string temp = "_temp" + std::to_string(count_names);
-	node->name = temp;
+	node->name = temp; //was = temp
+	//printf(node->name.c_str());
 	node->code += multExpr->code + expression->code;
 	node->code += std::string(". ") + temp + std::string("\n") + std::string("+ ") + temp + std::string(", ") + multExpr->name + std::string(", ") + expression->name + std::string("\n");
 	//printf(node->code.c_str());
@@ -449,7 +458,7 @@ term: var {
 	CodeNode *expression = $2;
 	node->name = expression->name;
 	node->code += expression->code;
-	printf(node->code.c_str());
+	//printf(node->code.c_str());
 	$$ = node;
 	}
   | ident L_PAREN expression R_PAREN {
@@ -461,9 +470,13 @@ term: var {
 	node->code += expression->code;
 	$$ = node;
 	}
-  | ident L_PAREN expression COMMA R_PAREN {
+  | ident L_PAREN expression COMMA expression R_PAREN {
 	//printf("term -> ident L_PAREN expression COMMA R_PAREN \n");
 	CodeNode *node = new CodeNode;
+	std::string id = $1;
+	CodeNode *expression1 = $3;
+	CodeNode *expression2 = $5;
+	
 	$$ = node;
 	}
   | ident L_PAREN R_PAREN {
