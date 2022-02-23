@@ -17,6 +17,7 @@ int count_names = 0;
 void yyerror(const char *msg);
 %}
 
+
 %union{
   char *ident; //op_val
   struct CodeNode *code_node; 
@@ -93,6 +94,7 @@ void yyerror(const char *msg);
 %type <code_node> var
 
 %start program
+
 
 %%
   /* write your rules here */
@@ -173,6 +175,10 @@ declaration: ident COLON INTEGER {
 	//$$ = node;
 	//printf("Declaration -> identifiers COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER \n")
 	//NOT DONE? -JEANA THINKS
+	CodeNode *node = new CodeNode;
+	std::string id = $1;
+	node->code += std::string(".[] ") + id + std::string(", ") + $5 + std::string("\n");
+	$$ = node; 
 };
 
 ident: IDENT {
@@ -185,13 +191,26 @@ statement: ident ASSIGN expression {
 	CodeNode *node = new CodeNode;
 	std::string id = $1;
 	CodeNode *expression = $3;
-	node->code = "";	//hard coded: expression.name
+	node->code = "";
 	node->code += expression->code;
-	//node->code = std::string("= ") + id + std::string(", 150\n"); //expression.name instead of 150
-	node->code = std::string("= ") + id + std::string(", ") + expression->name + std::string("\n");
+	node->code += std::string("= ") + id + std::string(", ") + expression->name + std::string("\n");
 	//printf("%p\n", $1);
-	printf("%s \n", node->code.c_str());
+	//printf("%s \n", node->code.c_str());
 	$$ = node;
+	}
+  | ident L_SQUARE_BRACKET expression R_SQUARE_BRACKET ASSIGN expression {
+	CodeNode *node = new CodeNode;
+	std::string id = $1;
+	CodeNode *expression1 = $3;
+	CodeNode *expression2 = $6;
+	std::string temp = "_temp" + std::to_string(count_names);
+	node->name = temp;
+	node->code = "";
+	node->code += expression1->code + expression2->code;
+	node->code += std::string("[]= ") + id + std::string(", ") + expression1->name + std::string(", ") + expression2->name + std::string("\n");
+	//printf(node->code.c_str());
+	$$ = node;
+	//count_names++;
 	}
   | IF bool_expr THEN statements elseStatement ENDIF {//printf("statement -> IF bool_expr THEN statements elseStatement ENDIF \n");
 	//CodeNode *node = new CodeNode;
@@ -228,8 +247,10 @@ statement: ident ASSIGN expression {
 	CodeNode *node = new CodeNode;
 	CodeNode *var = $2;
 	std::string id = var->name;
-	node->code = "";
+	//node->code = "";
+	node->code += var->code;
 	node->code += std::string(".> ") + id + std::string("\n");
+	//printf(node->code.c_str());
 	$$ = node;
 	}
   | CONTINUE {
@@ -316,33 +337,36 @@ expression: multExpr {
 	CodeNode *multExpr = $1;
 	std::string id = multExpr->name;
 	node->code = "";
-	node->code += id;
-	printf("%p\n", $1);
+	node->code += multExpr->code;
+	//node->code += id;
+	node->name = id;
+	//printf("%p\n", $1);
 	$$ = node;
 	}
   | multExpr ADD expression {
 	//printf("expression -> multExpr ADD expression \n");
-	/*std::string temp = "_temp" + count_names + std::string("\n");
-	CodeNode *node = new CodeNode;
-	node->code = $1->code + $3->code;
-	node->code += std::string(". ") + temp + std::string("\n") + std::string("+ ") + temp + std::string(", ") +  $1->name + std::string(", ") + $3->name + std::string("\n");
+	CodeNode * node= new CodeNode;
+	CodeNode *multExpr = $1;
+	CodeNode *expression = $3;
+	node->code = "";
+	std::string temp = "_temp" + std::to_string(count_names);
 	node->name = temp;
+	node->code += std::string(". ") + temp + std::string("\n") + std::string("+ ") + temp + std::string(", ") + multExpr->name + std::string(", ") + expression->name + std::string("\n");
+	//printf(node->code.c_str());
 	$$ = node;
-	count_names++;*/
-	CodeNode *node = new CodeNode;
-	$$ = node;
+	count_names++;
 	}
   | multExpr SUB expression {
 	//printf("expression -> multExpr SUB expression \n");
-	/*std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
-	node->code = $1->code + $3->code;
-	node->code += std::string(". ") + temp + std::string("\n") + std::string("- ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
-	node->code = temp;
+	CodeNode *multExpr = $1;
+        CodeNode *expression = $3;
+        node->code = "";
+        std::string temp = "_temp" + std::to_string(count_names);
+        node->name = temp;
+        node->code += std::string(". ") + temp + std::string("\n") + std::string("- ") + temp + std::string(", ") + multExpr->name + std::string(", ") + expression->name + std::string("\n");	
 	$$ = node;
-	count_names++;*/
-	CodeNode *node = new CodeNode;
-	$$ = node;
+	count_names++;
 	} 
 ;
 
@@ -352,39 +376,47 @@ multExpr: term  {
 	CodeNode *term = $1;
 	std::string id = term->name;
 	node->code = "";
-	node->code += id;
-	printf("%p\n", $1);
+	node->name = id;
+	//printf(node->name.c_str());
+	//printf("%p\n", $1);
 	$$ = node;
 	}
   | term MULT multExpr {
 	//printf("multExpr -> term MULT multExpr \n");
-	/*std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
-	node->code = $1->code + $3->code;
-	node->code += std::string(". ") + temp + std::string("\n") + std::string("* ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
-	node->code = temp;
+	CodeNode *term = $1;
+        CodeNode *multExpr = $3;
+        node->code = "";
+        std::string temp = "_temp" + std::to_string(count_names);
+        node->name = temp;
+        node->code += std::string(". ") + temp + std::string("\n") + std::string("* ") + temp + std::string(", ") + term->name + std::string(", ") + multExpr->name + std::string("\n");
+	//printf(node->code.c_str());
 	$$ = node;
-	count_names++;*/
+	count_names++;
 	}
   | term DIV multExpr {
 	//printf("multExpr -> term DIV multExpr \n");
-	/*std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
-	node->code = $1->code + $3->code;
-	node->code += std::string(". ") + temp + std::string("\n") + std::string("/ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
-	node->code = temp;
-	$$ = node;
-	count_names++;*/
+	CodeNode *term = $1;
+        CodeNode *multExpr = $3;
+        node->code = "";
+        std::string temp = "_temp" + std::to_string(count_names);
+        node->name = temp;
+        node->code += std::string(". ") + temp + std::string("\n") + std::string("/ ") + temp + std::string(", ") + term->name + std::string(", ") + multExpr->name + std::string("\n");
+        $$ = node;
+	count_names++;
 	}
   | term MOD multExpr {
 	//printf("multExpr -> term MOD multExpr \n");
-	/*std::string temp = "_temp" + count_names + std::string("\n");
 	CodeNode *node = new CodeNode;
-	node->code = $1->code + $3->code;
-	node->code += std::string(". ") + temp + std::string("\n") + std::string("% ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
-	node->code = temp;
-	$$ = node;
-	count_names++;*/
+	CodeNode *term = $1;
+        CodeNode *multExpr = $3;
+        node->code = "";
+        std::string temp = "_temp" + std::to_string(count_names);
+        node->name = temp;
+        node->code += std::string(". ") + temp + std::string("\n") + std::string("% ") + temp + std::string(", ") + term->name + std::string(", ") + multExpr->name + std::string("\n");
+        $$ = node;
+	count_names++;
 	}
 ;
 
@@ -394,13 +426,15 @@ term: var {
 	CodeNode *var = $1;
 	std::string id = var->name;
 	node->code = "";
-	node->code += id;
-	printf("%p\n", $1);
+	node->name = id;
+	//printf(node->code.c_str());
+	//printf("%p\n", $1);
 	$$ = node;
 	}
   | NUMBER {
 	//printf("term -> NUMBER %d\n", $1);
 	CodeNode *node = new CodeNode;
+	node->name = $1;
 	$$ = node;
 	}
   | L_PAREN expression R_PAREN {
@@ -430,12 +464,23 @@ var: ident {//printf("var -> IDENT \n");
 	CodeNode *node = new CodeNode;
 	node->code = "";
 	node->name = name;
-	printf("%p\n", $1);
+	//printf("%p\n", $1);
 	$$ = node;
 }
   | ident L_SQUARE_BRACKET expression R_SQUARE_BRACKET {
 	//printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET \n");
-	//a[10]
+	//write a[0] -> []= _temp1, a, 0
+	CodeNode *node = new CodeNode;
+        std::string id = $1;
+	CodeNode *expression = $3;
+	node->code = "";
+	std::string temp = "_temp" + std::to_string(count_names);
+	node->name += temp;
+	//printf(node->name.c_str());
+	node->code += std::string(". ") + temp + std::string("\n") + std::string("=[] ") + temp + std::string(", ") + id + std::string(", ") + expression->name + std::string("\n");
+	printf(node->code.c_str());
+	$$ = node;
+	count_names++;
 	}
 ;
 %%

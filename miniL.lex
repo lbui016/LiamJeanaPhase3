@@ -56,7 +56,7 @@ DIGIT   [0-9]
 
 [a-zA-z][a-zA-Z0-9]+?_  {printf("Error at line %d, column %d: identifier \"%s\" cannot end with underscore\n", lineCount, columnCount, yytext);}
 [a-zA-Z][a-zA-Z0-9_]?+        {char *ptr = new char[yyleng]; strcpy(ptr, yytext); yylval.ident=ptr; return IDENT; columnCount += yyleng;}
-{DIGIT}+        {columnCount += yyleng; yylval.num = atoi(yytext); return NUMBER;}
+{DIGIT}+        {columnCount += yyleng; char *ptr = new char[yyleng]; strcpy(ptr, yytext); yylval.ident = ptr; return NUMBER;}
 
 ";"      {return SEMICOLON;  columnCount += 1;}
 ":"      {return COLON;  columnCount += 1;}
