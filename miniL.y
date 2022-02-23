@@ -436,9 +436,10 @@ expression: multExpr {
 	CodeNode *node = new CodeNode;
 	CodeNode *multExpr = $1;
         CodeNode *expression = $3;
-        node->code = "";
+        //node->code = "";
         std::string temp = "_temp" + std::to_string(count_names);
         node->name = temp;
+	node->code += multExpr->code + expression->code;
         node->code += std::string(". ") + temp + std::string("\n") + std::string("- ") + temp + std::string(", ") + multExpr->name + std::string(", ") + expression->name + std::string("\n");	
 	$$ = node;
 	count_names++;
@@ -475,9 +476,10 @@ multExpr: term  {
 	CodeNode *node = new CodeNode;
 	CodeNode *term = $1;
         CodeNode *multExpr = $3;
-        node->code = "";
+        //node->code = "";
         std::string temp = "_temp" + std::to_string(count_names);
         node->name = temp;
+	node->code += term->code + multExpr->code;
         node->code += std::string(". ") + temp + std::string("\n") + std::string("/ ") + temp + std::string(", ") + term->name + std::string(", ") + multExpr->name + std::string("\n");
         $$ = node;
 	count_names++;
@@ -487,9 +489,10 @@ multExpr: term  {
 	CodeNode *node = new CodeNode;
 	CodeNode *term = $1;
         CodeNode *multExpr = $3;
-        node->code = "";
+        //node->code = "";
         std::string temp = "_temp" + std::to_string(count_names);
         node->name = temp;
+	node->code += term->code + multExpr->code;
         node->code += std::string(". ") + temp + std::string("\n") + std::string("% ") + temp + std::string(", ") + term->name + std::string(", ") + multExpr->name + std::string("\n");
         $$ = node;
 	count_names++;
