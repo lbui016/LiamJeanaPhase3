@@ -192,6 +192,8 @@ statement: ident ASSIGN expression {
 	std::string id = $1;
 	CodeNode *expression = $3;
 	node->code = "";
+	//node->name = id->name;
+	//node->name += expression->name;
 	node->code += expression->code;
 	node->code += std::string("= ") + id + std::string(", ") + expression->name + std::string("\n");
 	//printf("%p\n", $1);
@@ -205,7 +207,7 @@ statement: ident ASSIGN expression {
 	CodeNode *expression2 = $6;
 	std::string temp = "_temp" + std::to_string(count_names);
 	node->name = temp;
-	node->code = "";
+	//node->code = "";
 	node->code += expression1->code + expression2->code;
 	node->code += std::string("[]= ") + id + std::string(", ") + expression1->name + std::string(", ") + expression2->name + std::string("\n");
 	//printf(node->code.c_str());
@@ -248,6 +250,7 @@ statement: ident ASSIGN expression {
 	CodeNode *var = $2;
 	std::string id = var->name;
 	//node->code = "";
+	node->name = id;
 	node->code += var->code;
 	node->code += std::string(".> ") + id + std::string("\n");
 	//printf(node->code.c_str());
@@ -336,7 +339,7 @@ expression: multExpr {
 	CodeNode *node = new CodeNode;
 	CodeNode *multExpr = $1;
 	std::string id = multExpr->name;
-	node->code = "";
+	//node->code = "";
 	node->code += multExpr->code;
 	//node->code += id;
 	node->name = id;
@@ -348,9 +351,10 @@ expression: multExpr {
 	CodeNode * node= new CodeNode;
 	CodeNode *multExpr = $1;
 	CodeNode *expression = $3;
-	node->code = "";
+	//node->code = "";
 	std::string temp = "_temp" + std::to_string(count_names);
 	node->name = temp;
+	node->code += multExpr->code + expression->code;
 	node->code += std::string(". ") + temp + std::string("\n") + std::string("+ ") + temp + std::string(", ") + multExpr->name + std::string(", ") + expression->name + std::string("\n");
 	//printf(node->code.c_str());
 	$$ = node;
@@ -375,9 +379,9 @@ multExpr: term  {
 	CodeNode *node = new CodeNode;
 	CodeNode *term = $1;
 	std::string id = term->name;
-	node->code = "";
+	node->code += term->code;
 	node->name = id;
-	//printf(node->name.c_str());
+	//printf(node->code.c_str());
 	//printf("%p\n", $1);
 	$$ = node;
 	}
@@ -386,9 +390,10 @@ multExpr: term  {
 	CodeNode *node = new CodeNode;
 	CodeNode *term = $1;
         CodeNode *multExpr = $3;
-        node->code = "";
+        //node->code = "";
         std::string temp = "_temp" + std::to_string(count_names);
         node->name = temp;
+	node->code += term->code + multExpr->code;
         node->code += std::string(". ") + temp + std::string("\n") + std::string("* ") + temp + std::string(", ") + term->name + std::string(", ") + multExpr->name + std::string("\n");
 	//printf(node->code.c_str());
 	$$ = node;
@@ -425,7 +430,8 @@ term: var {
 	CodeNode *node = new CodeNode;
 	CodeNode *var = $1;
 	std::string id = var->name;
-	node->code = "";
+	//node->code = "";
+	node->code += var->code;
 	node->name = id;
 	//printf(node->code.c_str());
 	//printf("%p\n", $1);
@@ -440,11 +446,19 @@ term: var {
   | L_PAREN expression R_PAREN {
 	//printf("term -> L_PAREN expression R_PAREN \n");
 	CodeNode *node = new CodeNode;
+	CodeNode *expression = $2;
+	node->name = expression->name;
+	node->code += expression->code;
+	printf(node->code.c_str());
 	$$ = node;
 	}
   | ident L_PAREN expression R_PAREN {
 	//printf("term -> ident L_PAREN expression R_PAREN \n");
 	CodeNode *node = new CodeNode;
+	std::string id = $1;
+	CodeNode *expression = $3;
+	node->name = id;
+	node->code += expression->code;
 	$$ = node;
 	}
   | ident L_PAREN expression COMMA R_PAREN {
@@ -473,12 +487,13 @@ var: ident {//printf("var -> IDENT \n");
 	CodeNode *node = new CodeNode;
         std::string id = $1;
 	CodeNode *expression = $3;
-	node->code = "";
+	//node->code = "";
 	std::string temp = "_temp" + std::to_string(count_names);
 	node->name += temp;
 	//printf(node->name.c_str());
+	node->code += expression->code;
 	node->code += std::string(". ") + temp + std::string("\n") + std::string("=[] ") + temp + std::string(", ") + id + std::string(", ") + expression->name + std::string("\n");
-	printf(node->code.c_str());
+	//printf(node->code.c_str());
 	$$ = node;
 	count_names++;
 	}
