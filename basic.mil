@@ -1,0 +1,12 @@
+func main
+. a
+= a, 150
+.> a
+endfunc
+
+
+symbol table:
+--------------------
+function: main
+  locals: a
+--------------------

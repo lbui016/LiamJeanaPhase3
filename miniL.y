@@ -148,6 +148,8 @@ void yyerror(const char *msg);
 %type <code_node> multExpr
 %type <code_node> term
 %type <code_node> var
+%type <code_node> paramDeclarations
+%type <code_node> localDeclarations
 
 %start program
 
@@ -173,28 +175,49 @@ functions: function functions{
 	$$ = node; //empty 
 };
 
-function: FUNCTION ident SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY {
-	//{printf("function -> FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY \n");}
-	CodeNode *node = new CodeNode;
+grammar: FUNCTION ident {
 	std::string func_name = $2;
 	add_function_to_symbol_table(func_name);
+	
+};
+
+function: grammar  SEMICOLON BEGIN_PARAMS paramDeclarations END_PARAMS BEGIN_LOCALS localDeclarations END_LOCALS BEGIN_BODY statements END_BODY {
+	//{printf("function -> FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY \n");}
+	CodeNode *node = new CodeNode;
+	//midrule, add function to symbol table
+	//add_function_to_symbol_table(func_name);
+	Function *func_name = get_function(); 
 	node->code = "";
-	node->code += std::string("func ") + func_name + std::string("\n");
+	node->code += std::string("func ") + func_name->name + std::string("\n");
 	// declare the params declarations
-	CodeNode *declarations = $5;
+	CodeNode *declarations = $4;
 	node->code += declarations->code;
 
 	// declare local variables
-	CodeNode *locals = $8;
+	CodeNode *locals = $7;
 	node->code += locals->code;
 	
 	// add the statements
-	CodeNode *statements = $11;
+	CodeNode *statements = $10;
 	node->code += statements->code;
 
-	node->code += std::string("endfunc\n");
+	node->code += std::string("endfunc\n") + std::string("\n");
 
 	$$ = node; 
+};
+
+paramDeclarations: declarations {
+	CodeNode *node = new CodeNode;
+	Function *f = get_function();
+	node->code = $1->code;
+	for(int i = 0; i < f->declarations.size(); i++) {
+		node->code += std::string("= ") + f->declarations[i].name + std::string(", ") + std::string("$") + std::to_string(i) + std::string("\n"); 
+	}
+	$$ = node;
+};
+
+localDeclarations: declarations {
+	$$ = $1;
 };
 
 declarations: declaration SEMICOLON declarations {
@@ -220,7 +243,7 @@ declaration: ident COLON INTEGER {
 	CodeNode *node = new CodeNode;
 	std::string id = $1;
 	Type t = Integer;
-	//add_variable_to_symbol_table(id, t);
+	add_variable_to_symbol_table(id, t);
 	node->code = std::string(". ") + id + std::string("\n");
 	$$ = node;
 	//printf(". %s\n", id);
@@ -541,8 +564,15 @@ term: var {
 	std::string id = $1;
 	CodeNode *expression1 = $3;
 	CodeNode *expression2 = $5;
-	
+	std::string temp = "_temp" + std::to_string(count_names);
+	node->name = temp; //was id
+	node->code += expression1->code; /* + expression2->code;*/
+	node->code += std::string("param ") + expression1->name + std::string("\n");
+	node->code += expression2->code; 
+	node->code += std::string("param ") + expression2->name + std::string("\n") + std::string(". ") + temp + std::string("\n") + std::string("call ") + id + std::string(", ") + temp + std::string("\n");	
+	//printf(node->code.c_str());
 	$$ = node;
+	count_names++;
 	}
   | ident L_PAREN R_PAREN {
 	//printf("term -> ident L_PAREN R_PAREN");
