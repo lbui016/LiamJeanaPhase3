@@ -14,7 +14,6 @@ extern int yyparse();
 extern FILE* yyin;
 
 int count_names = 0;
-int count_loop = 0;
 
 enum Type { Integer, Array };
 struct Symbol {
@@ -151,8 +150,6 @@ void yyerror(const char *msg);
 %type <code_node> var
 %type <code_node> paramDeclarations
 %type <code_node> localDeclarations
-%type <code_node> bool_expr
-%type <code_node> comp
 
 %start program
 
@@ -313,34 +310,12 @@ statement: ident ASSIGN expression {
 	CodeNode *node = new CodeNode;
 	$$ = node;
 	}
-  | WHILE {
-	//beginning of the loop 
-	//int count_loop = 0;
-	//std::stack<int> loop_stack;
-	//push loop_stack
-
-	printf(": beginloop\n");
-	//int count_loop = 0;
-    }
-    bool_expr {
-	//peek at the loop_stack;
-
-	//grab the variable of the conditional statement
-	//printf(". tempbool\n")
-	//generate code to handle setting tempbool to 1/0
-	//depending on the conditional
-	//printf("= tempbool, 1\n")
-	printf("?:= loopbody%d, 1\n", count_loop, count_loop);
-	printf(":= ednloop%d\n");
-	printf(": loopbody%d\n");
-    }
-    BEGIN_LOOP statements ENDLOOP {//printf("statement -> WHILE bool_expr BEGIN_LOOP statements ENDLOOP");
-	//end of the loop
-	printf(":= beginloop\n");
-	printf(": endloop\n");
-	
-	// pop loop_Stack
-    }
+  | WHILE bool_expr BEGIN_LOOP statements ENDLOOP {//printf("statement -> WHILE bool_expr BEGIN_LOOP statements ENDLOOP");
+	//CodeNode *node = new CodeNode;
+	//$$ = node;
+	CodeNode *node = new CodeNode;
+	$$ = node;
+	}
   | DO BEGIN_LOOP statements ENDLOOP WHILE bool_expr {//printf("statement -> DO BEGIN_LOOP statements ENDLOOP WHILE bool_expr \n");
 	//CodeNode *node = new CodeNode;
 	//$$ = node;
@@ -392,8 +367,7 @@ statement: ident ASSIGN expression {
 ;
 
 statements: statement SEMICOLON statements {
-  	printf("stat semi state\n");
-	CodeNode *code_node1 = $1;
+  	CodeNode *code_node1 = $1;
 	CodeNode *code_node2 = $3;
 	
 	CodeNode *node = new CodeNode;
@@ -401,7 +375,6 @@ statements: statement SEMICOLON statements {
 	$$ = node;
 	}
 	| %empty {
-	printf("empty statement\n");
 	CodeNode *node = new CodeNode;
 	$$ = node;
 };
@@ -415,9 +388,7 @@ elseStatement: %empty {
 ;
 
 bool_expr: bool_expr bool_expr {
-	printf("bool_expr -> bool_expr bool_expr \n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
+	//printf("bool_expr -> bool_expr bool_expr \n");
 	}
   | expression comp expression {
 	//printf("bool_expr -> expression comp expression \n");
@@ -427,51 +398,32 @@ bool_expr: bool_expr bool_expr {
 	CodeNode *comparison  = $2;
 	std::string comp = comparision->name;
 	node->code = comp +*/
-	printf("exp comp exp\n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
 	}
   | NOT {
-	printf("bool_expr -> NOT \n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
+	//printf("bool_expr -> NOT \n");
 	}
   | %empty {
-	printf("bool_expr -> epsilon \n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
+	//printf("bool_expr -> epsilon \n");
 	}
 ;
 
 comp: EQ {
 	//printf("comp -> EQ \n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
 	}
   | NEQ {
 	//printf("comp -> NEQ \n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
 	}
   | LT {
-	printf("comp -> LT \n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
+	//printf("comp -> LT \n");
 	}
   | GT {
 	//printf("comp -> GT \n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
 	}
   | LTE {
 	//printf("comp -> LTE \n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
 	}
   | GTE {
 	//printf("comp -> GTE \n");
-	CodeNode *node = new CodeNode;
-        $$ = node;
 	}
 ;
 
