@@ -15,6 +15,7 @@ extern FILE* yyin;
 
 int count_names = 0;
 int count_loop = 0;
+int count_if = 0;
 
 enum Type { Integer, Array };
 struct Symbol {
@@ -153,6 +154,7 @@ void yyerror(const char *msg);
 %type <code_node> localDeclarations
 %type <code_node> bool_expr
 %type <code_node> comp
+%type <code_node> elseStatement
 
 %start program
 
@@ -304,42 +306,50 @@ statement: ident ASSIGN expression {
 	//count_names++;
 	}
   | IF bool_expr THEN statements elseStatement ENDIF {//printf("statement -> IF bool_expr THEN statements elseStatement ENDIF \n");
-	//CodeNode *node = new CodeNode;
-	//std::string bool_expression = $2;
-	//CodeNode *statements = $4;
-	//CodeNode *elseStatement = $5;
-	//node->code = std::string("?:= ") + statements->code + std::string(", ") + elseStatement->code + std::string(", ") + std::string("\n"); //TODO: add bool expr 
-	//$$ = node;
 	CodeNode *node = new CodeNode;
+	std::string temp = "_temp" + std::to_string(count_names - 1);
+	CodeNode *bexpression = $2;
+	CodeNode *statements = $4;
+	CodeNode *elseStatement = $5;
+	node->code += bexpression->code;
+	node->code += "?:= if_true" + std::to_string(count_if) + ", " + temp + "\n"; 
+//+ ":= else" + std::to_string(count_if) + "\n";
+	node->code += statements->code + ":= endif" + std::to_string(count_if) + "\n";
+	node->code += ": if_true" + std::to_string(count_if)  + "\n"; 
+//node->name += statements->name + "\n";
+	//node->code += statements->code + ":= endif" + std::to_string(count_if) + "\n";
+	node->code += elseStatement->code;
+	//node->code += statements->code;
+	node->name = bexpression->name + statements->name;
+	
+
+	//node->code += ": if_true" + std::to_string(count_if)  + "\n"; 	
+	//node->code += elseStatement->code;
 	$$ = node;
 	}
-  | WHILE {
+  | WHILE bool_expr BEGIN_LOOP statements ENDLOOP {
 	//beginning of the loop 
 	//int count_loop = 0;
 	//std::stack<int> loop_stack;
 	//push loop_stack
 
-	printf(": beginloop\n");
-	//int count_loop = 0;
-    }
-    bool_expr {
-	//peek at the loop_stack;
+	//printf(": beginloop%d\n", count_loop);
+	CodeNode *node = new CodeNode;
+	node->code = ": beginloop" + std::to_string(count_loop)	+ "\n";
+        std::string temp = "_temp" + std::to_string(count_names - 2);
+        CodeNode *bexpression = $2;
+        node->code += bexpression->code;
+        node->name = bexpression->name;
+        node->code += "?:= loopbody" + std::to_string(count_loop) + ", " + temp + "\n" + ":= endloop" + std::to_string(count_loop) + "\n" + ": loopbody" + std::to_string(count_loop) + "\n";
+	//CodeNode *node = new CodeNode;
+        CodeNode *statements = $4;
+        node->name += statements->name;
+        node->code += statements->code;
+        
+	node->code += ":= beginloop" + std::to_string(count_loop) + "\n" + ": endloop" + std::to_string(count_loop) + "\n";
+	$$ = node;  
 
-	//grab the variable of the conditional statement
-	//printf(". tempbool\n")
-	//generate code to handle setting tempbool to 1/0
-	//depending on the conditional
-	//printf("= tempbool, 1\n")
-	printf("?:= loopbody%d, 1\n", count_loop, count_loop);
-	printf(":= ednloop%d\n");
-	printf(": loopbody%d\n");
-    }
-    BEGIN_LOOP statements ENDLOOP {//printf("statement -> WHILE bool_expr BEGIN_LOOP statements ENDLOOP");
-	//end of the loop
-	printf(":= beginloop\n");
-	printf(": endloop\n");
-	
-	// pop loop_Stack
+	count_loop++;
     }
   | DO BEGIN_LOOP statements ENDLOOP WHILE bool_expr {//printf("statement -> DO BEGIN_LOOP statements ENDLOOP WHILE bool_expr \n");
 	//CodeNode *node = new CodeNode;
@@ -375,6 +385,10 @@ statement: ident ASSIGN expression {
   | BREAK {
 	//printf("statement -> BREAK \n");
 	CodeNode *node = new CodeNode;
+	node->name += ":= endloop" + std::to_string(count_loop);
+	printf("FROM BREAK\n");
+	printf(node->name.c_str());
+	printf("\n\n");
 	$$ = node;
 	}
   | RETURN expression {
@@ -392,30 +406,44 @@ statement: ident ASSIGN expression {
 ;
 
 statements: statement SEMICOLON statements {
-  	printf("stat semi state\n");
+  	//printf("stat semi state\n");
 	CodeNode *code_node1 = $1;
 	CodeNode *code_node2 = $3;
 	
 	CodeNode *node = new CodeNode;
 	node->code = code_node1->code + code_node2->code;
+	node->name = code_node1->name + code_node2->name;
+	printf(node->name.c_str());
+	printf("\n\n");
 	$$ = node;
 	}
 	| %empty {
-	printf("empty statement\n");
+	//printf("empty statement\n");
 	CodeNode *node = new CodeNode;
 	$$ = node;
 };
 
 elseStatement: %empty {
 	//printf("elseStatement -> epsilon \n");
+	CodeNode *node = new CodeNode;
+        $$ = node;
 	} 
   | ELSE statements {
 	//printf("elseStatement -> ELSE statements \n");
+	CodeNode *node = new CodeNode;
+        CodeNode *statements = $2;
+	//node->code += statements->code;
+	node->code += ": else" + std::to_string(count_if) + "\n";
+	//node->code += ": if_true" + std::to_string(count_if)  + "\n";
+	node->code += statements->code;
+	node->name = statements->name;
+	node->code += ": endif" + std::to_string(count_if) + "\n";
+	$$ = node;
 	}
 ;
 
 bool_expr: bool_expr bool_expr {
-	printf("bool_expr -> bool_expr bool_expr \n");
+	//printf("bool_expr -> bool_expr bool_expr \n");
 	CodeNode *node = new CodeNode;
         $$ = node;
 	}
@@ -427,17 +455,31 @@ bool_expr: bool_expr bool_expr {
 	CodeNode *comparison  = $2;
 	std::string comp = comparision->name;
 	node->code = comp +*/
-	printf("exp comp exp\n");
+	//printf("exp comp exp\n");
 	CodeNode *node = new CodeNode;
-        $$ = node;
+        std::string temp = "_temp" + std::to_string(count_names);
+	//std::string comparison = $2;
+	//printf(comparison.c_str());
+	CodeNode *src1 = $1;
+	CodeNode *src2 = $3;
+	CodeNode *comparison = $2;
+	node->name = temp;
+	node->code += src1->code + src2->code;
+	node->code += ". " + temp + "\n" + comparison->name + " " + temp + ", " + src1->name + ", " + src2->name + "\n"; 
+	//CodeNode *comparision = $2;
+	
+	
+
+	$$ = node;
+	count_names++;
 	}
   | NOT {
-	printf("bool_expr -> NOT \n");
+	//printf("bool_expr -> NOT \n");
 	CodeNode *node = new CodeNode;
         $$ = node;
 	}
   | %empty {
-	printf("bool_expr -> epsilon \n");
+	//printf("bool_expr -> epsilon \n");
 	CodeNode *node = new CodeNode;
         $$ = node;
 	}
@@ -446,32 +488,41 @@ bool_expr: bool_expr bool_expr {
 comp: EQ {
 	//printf("comp -> EQ \n");
 	CodeNode *node = new CodeNode;
-        $$ = node;
+        node->name = "==";
+	$$ = node;
 	}
   | NEQ {
 	//printf("comp -> NEQ \n");
 	CodeNode *node = new CodeNode;
-        $$ = node;
+        node->name = "!=";
+	$$ = node;
 	}
   | LT {
-	printf("comp -> LT \n");
+	//printf("comp -> LT \n");
+	//CodeNode *node = new CodeNode;
+        //std::string temp = "_temp" + std::to_string(count_names);
+	//node->name = temp;
 	CodeNode *node = new CodeNode;
-        $$ = node;
+	node->name = "<"; 
+	$$ = node;
 	}
   | GT {
 	//printf("comp -> GT \n");
 	CodeNode *node = new CodeNode;
+	node->name = ">";
         $$ = node;
 	}
   | LTE {
 	//printf("comp -> LTE \n");
 	CodeNode *node = new CodeNode;
+	node->name = "<=";
         $$ = node;
 	}
   | GTE {
 	//printf("comp -> GTE \n");
 	CodeNode *node = new CodeNode;
-        $$ = node;
+        node->name = ">=";
+	$$ = node;
 	}
 ;
 
