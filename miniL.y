@@ -313,18 +313,41 @@ statement: ident ASSIGN expression {
 	CodeNode *elseStatement = $5;
 	node->code += bexpression->code;
 	node->code += "?:= if_true" + std::to_string(count_if) + ", " + temp + "\n"; 
-//+ ":= else" + std::to_string(count_if) + "\n";
-	node->code += statements->code + ":= endif" + std::to_string(count_if) + "\n";
-	node->code += ": if_true" + std::to_string(count_if)  + "\n"; 
+	//node->code += elseStatement->code;
+	if (elseStatement->code != "") {
+		node->code += ":= else" + std::to_string(count_if) + "\n";
+		node->code += ": if_true" + std::to_string(count_if) + "\n";
+		node->code += statements->code;
+        	//node->name += statements->name + "\n";
+		node->code += ":= endif" + std::to_string(count_if) + "\n";	
+		node->code += elseStatement->code;
+		
+	}
+	else {
+		node->code += ":= endif" + std::to_string(count_if) + "\n";
+		node->code += ": if_true " + std::to_string(count_if) + "\n";	
+		//node->code += "
+		//node->code += statements->code + "\n";
+        	node->name += statements->name + "\n";
+		node->code += node->name;
+		printf(node->code.c_str());
+	}
+	//printf(node->code.c_str());
+//node->code += ":= endif" + std::to_string(count_if) + "\n";
+	//node->code += ": if_true" + std::to_string(count_if) + "\n"; 
 //node->name += statements->name + "\n";
-	//node->code += statements->code + ":= endif" + std::to_string(count_if) + "\n";
-	node->code += elseStatement->code;
+	//node->code += statements->code + "\n";
+	//node->name += statements->name + "\n";
+	//node->code += node->name;
+	//node->code += ":= endif" + std::to_string(count_if) + "\n";
+	//node->code += elseStatement->code;
 	//node->code += statements->code;
-	node->name = bexpression->name + statements->name;
-	
+//node->name = bexpression->name;
+	//node->code += statements->name;
 
 	//node->code += ": if_true" + std::to_string(count_if)  + "\n"; 	
 	//node->code += elseStatement->code;
+	node->code += ": endif" + std::to_string(count_if) + "\n";
 	$$ = node;
 	}
   | WHILE bool_expr BEGIN_LOOP statements ENDLOOP {
@@ -386,9 +409,6 @@ statement: ident ASSIGN expression {
 	//printf("statement -> BREAK \n");
 	CodeNode *node = new CodeNode;
 	node->name += ":= endloop" + std::to_string(count_loop);
-	printf("FROM BREAK\n");
-	printf(node->name.c_str());
-	printf("\n\n");
 	$$ = node;
 	}
   | RETURN expression {
@@ -411,10 +431,8 @@ statements: statement SEMICOLON statements {
 	CodeNode *code_node2 = $3;
 	
 	CodeNode *node = new CodeNode;
-	node->code = code_node1->code + code_node2->code;
-	node->name = code_node1->name + code_node2->name;
-	printf(node->name.c_str());
-	printf("\n\n");
+	node->code += code_node1->code + code_node2->code;
+	node->name += code_node1->name + code_node2->name;
 	$$ = node;
 	}
 	| %empty {
@@ -433,11 +451,13 @@ elseStatement: %empty {
 	CodeNode *node = new CodeNode;
         CodeNode *statements = $2;
 	//node->code += statements->code;
+	//node->code += ":= else" + std::to_string(count_if) + "\n";
+	//node->code += ": if_true" + std::to_string(count_if)  + "\n";
 	node->code += ": else" + std::to_string(count_if) + "\n";
 	//node->code += ": if_true" + std::to_string(count_if)  + "\n";
 	node->code += statements->code;
 	node->name = statements->name;
-	node->code += ": endif" + std::to_string(count_if) + "\n";
+	//node->code += ": endif" + std::to_string(count_if) + "\n";
 	$$ = node;
 	}
 ;
